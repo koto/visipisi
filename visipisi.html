@@ -1,0 +1,282 @@
+<!DOCTYPE html 
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+<title>visipisi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
+type="text/javascript"></script>
+<script type="text/javascript">
+
+$(window).load(function () {
+  $('#rundemo').click(function (){
+
+    var urls = {
+facebook: 'http://static.ak.fbcdn.net/rsrc.php/v1/yp/r/kk8dc2UJYJ4.png',
+twitter: 'https://twimg0-a.akamaihd.net/a/1322778272/phoenix/img/sprite-icons.png',
+digg: 'http://cdn2.diggstatic.com/img/sprites/global.5b25823e.png',
+reddit: 'http://www.redditstatic.com/sprite-reddit.pZL22qP4ous.png',
+hn: 'http://ycombinator.com/images/y18.gif',
+stumbleupon: 'http://cdn.stumble-upon.com/i/bg/logo_su.png',
+wired: 'http://www.wired.com/images/home/wired_logo.gif',
+xkcd: 'http://imgs.xkcd.com/s/9be30a7.png',
+linkedin: 'http://static01.linkedin.com/scds/common/u/img/sprite/sprite_global_v6.png',
+slashdot: 'http://a.fsdn.com/sd/logo_w_l.png',
+myspace: 'http://cms.myspacecdn.com/cms/x/11/47/title-WhatsHotWhite.jpg',
+engadget: 'http://www.blogsmithmedia.com/www.engadget.com/media/engadget_logo.png',
+lastfm: 'http://cdn.lst.fm/flatness/anonhome/1/anon-sprite.png',
+pandora: 'http://www.pandora.com/img/logo.png',
+youtube: 'http://s.ytimg.com/yt/img/pixel-vfl3z5WfW.gif',
+yahoo: 'http://l.yimg.com/ao/i/mp/properties/frontpage/01/img/aufrontpage-sprite.s1740.gif',
+google: 'https://www.google.com/intl/en_com/images/srpr/logo3w.png',
+hotmail: 'https://secure.shared.live.com/~Live.SiteContent.ID/~16.2.8/~/~/~/~/images/iconmap.png',
+cnn: 'http://i.cdn.turner.com/cnn/.element/img/3.0/global/header/intl/hdr-globe-central.gif',
+bbc: 'http://static.bbc.co.uk/frameworks/barlesque/1.21.2/desktop/3/img/blocks/light.png',
+reuters: 'http://www.reuters.com/resources_v2/images/masthead-logo.gif',
+wikipedia: 'http://upload.wikimedia.org/wikipedia/en/b/bc/Wiki.png',
+amazon: 'http://g-ecx.images-amazon.com/images/G/01/gno/images/orangeBlue/navPackedSprites-US-22._V183711641_.png',
+ebay: 'http://p.ebaystatic.com/aw/pics/au/logos/logoEbay_x45.gif',
+newegg: 'http://images10.newegg.com/WebResource/Themes/2005/Nest/neLogo.png',
+bestbuy: 'http://images.bestbuy.com/BestBuy_US/en_US/images/global/header/hdr_logo.gif',
+walmart: 'http://i2.walmartimages.com/i/header_wide/walmart_logo_214x54.gif',
+abebooks: 'http://www.abebooks.com/images/HeaderFooter/siteRevamp/AbeBooks-logo.gif',
+msy: 'http://msy.com.au/images/MSYLogo-long.gif',
+techbuy: 'http://www.techbuy.com.au/themes/default/images/tblogo.jpg',
+borders: 'http://www.borders.com.au/images/ui/logo-site-footer.gif',
+mozilla: 'http://www.mozilla.org/images/template/screen/logo_footer.png',
+anandtech: 'http://www.anandtech.com/content/images/globals/header_logo.png',
+tomshardware: 'http://m.bestofmedia.com/i/tomshardware/v3/logo_th.png',
+shopbot: 'http://i.shopbot.com.au/s/i/logo/en_AU/shopbot.gif',
+staticice: 'http://staticice.com.au/images/banner.jpg'
+    };
+    sites = [];
+    for (var k in urls)
+      sites.push(k);
+    sites.reverse();
+
+    $('td').text('');
+
+    var firstSite = sites.pop();
+    visipisi(urls[firstSite], function(result) {
+      visipisiCB(sites, urls, firstSite, result);
+    });
+
+  });
+});
+
+function visipisiCB(sites, urls, site, result) {
+  if (result === null)
+    $('#' + site + '-status').text('whoops').css('color', '#888');
+  else
+    $('#' + site + '-status').text(result ? 'visited' : 'not visited')
+      .css('color', result ? 'green' : 'red');
+  var nextSite = sites.pop();
+  if (nextSite)
+    visipisi(urls[nextSite], function (result) {
+      visipisiCB(sites, urls, nextSite, result);
+    });
+}
+
+function visipisi(url, cb)
+{
+  var count = 0;
+  var start, cachedTime, uncachedTime;
+  var cached = new Image(), uncached = new Image();
+  var determineVisitedness = function () {
+    cb(cachedTime < 0.05 * uncachedTime);
+  }
+  var errCB = function () {
+    count = -10;
+    cb(null);
+  }
+
+  cached.onload = function() {
+    cachedTime = (new Date()).getTime() - start;
+    if (++count == 2)
+      determineVisitedness();
+  };
+  uncached.onload = function() {
+    uncachedTime = (new Date()).getTime() - start;
+    if (++count == 2)
+      determineVisitedness();
+  };
+  cached.onerror = errCB;
+  uncached.onerror = errCB;
+
+  var start = (new Date()).getTime();
+  cached.src = url;
+  uncached.src = url + ('?' + Math.random());
+}
+</script>
+<style type="text/css">
+body {
+  font-family: sans;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5em;
+  margin: 1em;
+}
+h1, h2 { margin: 0; }
+h1 { font-size: 150%; } h2 { font-size: 115%; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+table td, table th { border: 1px solid #ddd; }
+table th { text-align: left; width: 1px; }
+
+#code {
+  width: 40%;
+  float: right;
+  margin: 1em;
+  border: 1px solid #ddd;
+  padding: 1em;
+  font-size: 80%;
+  line-height: 1.1em;
+}
+#demo {
+  clear: both;
+  margin: 1em;
+}
+</style>
+</head>
+
+<body>
+<h1>visipisi</h1>
+
+<div id="code">
+<h2>/code/</h2>
+<p>
+<pre>
+function visipisi(url, cb)
+{
+  var count = 0;
+  var start, cachedTime, uncachedTime;
+  var cached = new Image(), uncached = new Image();
+  var determineVisitedness = function () {
+    cb(cachedTime &lt; 0.05 * uncachedTime);
+  }
+  var errCB = function () {
+    count = -10;
+    cb(null);
+  }
+
+  cached.onload = function() {
+    cachedTime = (new Date()).getTime() - start;
+    if (++count == 2)
+      determineVisitedness();
+  };
+  uncached.onload = function() {
+    uncachedTime = (new Date()).getTime() - start;
+    if (++count == 2)
+      determineVisitedness();
+  };
+  cached.onerror = errCB;
+  uncached.onerror = errCB;
+
+  var start = (new Date()).getTime();
+  cached.src = url;
+  uncached.src = url + ('?' + Math.random());
+}
+</pre>
+</p>
+</div>
+
+<p id="desc">
+I came across this post on <a href="">HN</a> and thought I give it a try
+and see if I can make it work across more browsers and more reliably. I
+think I've succeeded. Mine works a bit differently. The code's to your
+right. It simply downloads two images from one site, one that might or
+might not have been cached, and the other which is certainly not cached
+due to a generated random query string appended to the base URL. It then
+compares the loading times and if there is a significant difference, it
+determines the site to have been previously visited. The function
+calls the callback given to it with true if the url has previously been
+visited, false otherwise.
+</p>
+<p>
+What I've observerd is that appending a random query string at the end
+the URL sometimes causes up to 10x increase in latency. So there maybe
+false positives. But if you have something cached, this should pick it
+up almost perfectly.
+</p>
+<p>
+You can try it out below. Note that after the first run, all the images
+from the test sites will be cached. So any subsequent tries will result
+in all sites showing as visited. You need to clear your browsers cache,
+visit some sites and try again.
+</p>
+<p>
+All the code including this page is released under GPL license version
+3. If you have questions or any feedback, please send me an email at
+mansour [at] oxplot [dot] com
+</p>
+
+<div id="demo">
+<button id="rundemo">Do the magic</button>
+
+<table>
+<tr>
+  <th>facebook:</th><td id="facebook-status"></td>
+  <th>slashdot:</th><td id="slashdot-status"></td>
+  <th>cnn:</th><td id="cnn-status"></td>
+  <th>abebooks:</th><td id="abebooks-status"></td>
+</tr>
+<tr>
+  <th>twitter:</th><td id="twitter-status"></td>
+  <th>myspace:</th><td id="myspace-status"></td>
+  <th>bbc:</th><td id="bbc-status"></td>
+  <th>msy:</th><td id="msy-status"></td>
+</tr>
+<tr>
+  <th>digg:</th><td id="digg-status"></td>
+  <th>engadget:</th><td id="engadget-status"></td>
+  <th>reuters:</th><td id="reuters-status"></td>
+  <th>techbuy:</th><td id="techbuy-status"></td>
+</tr>
+<tr>
+  <th>reddit:</th><td id="reddit-status"></td>
+  <th>last.fm:</th><td id="lastfm-status"></td>
+  <th>wikipedia:</th><td id="wikipedia-status"></td>
+  <th>borders (au):</th><td id="borders-status"></td>
+</tr>
+<tr>
+  <th>HN:</th><td id="hn-status"></td>
+  <th>pandora:</th><td id="pandora-status"></td>
+  <th>amazon:</th><td id="amazon-status"></td>
+  <th>mozilla:</th><td id="mozilla-status"></td>
+</tr>
+<tr>
+  <th>stumbleupon:</th><td id="stumbleupon-status"></td>
+  <th>youtube:</th><td id="youtube-status"></td>
+  <th>ebay (au):</th><td id="ebay-status"></td>
+  <th>anandtech:</th><td id="anandtech-status"></td>
+</tr>
+<tr>
+  <th>wired</th><td id="wired-status"></td>
+  <th>yahoo:</th><td id="yahoo-status"></td>
+  <th>newegg:</th><td id="newegg-status"></td>
+  <th>tomshardware:</th><td id="tomshardware-status"></td>
+</tr>
+<tr>
+  <th>xkcd</th><td id="xkcd-status"></td>
+  <th>google:</th><td id="google-status"></td>
+  <th>bestbuy:</th><td id="bestbuy-status"></td>
+  <th>shopbot (au):</th><td id="shopbot-status"></td>
+</tr>
+<tr>
+  <th>linkedin</th><td id="linkedin-status"></td>
+  <th>hotmail:</th><td id="hotmail-status"></td>
+  <th>walmart:</th><td id="walmart-status"></td>
+  <th>staticice:</th><td id="staticice-status"></td>
+</tr>
+</table>
+</div>
+
+</body>
+</html>
