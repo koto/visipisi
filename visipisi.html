@@ -201,16 +201,20 @@ function visipisi(url, cb)
 </div>
 
 <p id="desc">
-I came across this post on <a href="">HN</a> and thought I give it a try
-and see if I can make it work across more browsers and more reliably. I
-think I've succeeded. Mine works a bit differently. The code's to your
-right. It simply downloads two images from one site, one that might or
-might not have been cached, and the other which is certainly not cached
-due to a generated random query string appended to the base URL. It then
-compares the loading times and if there is a significant difference, it
-determines the site to have been previously visited. The function
-calls the callback given to it with true if the url has previously been
-visited, false otherwise.
+I came across <a href="http://lcamtuf.coredump.cx/cachetime/">this
+post</a> on <a href="http://news.ycombinator.com/">HN</a> and thought I
+give it a try and see if I can make it work across more browsers and
+more reliably. The goal is to determine which websites the user have
+visited through their browser. Mine works a bit differently. The code's
+to your right. It simply downloads two images from one site, one that
+might or might not have been cached, and the other which is certainly
+not cached due to a generated random query string appended to the base
+URL. It then compares the loading times and if there is a significant
+difference, it determines the site to have been previously visited. The
+function calls the callback given to it with true if the url has
+previously been visited, false otherwise. I have tested this on FF 5 and
+recent version of Chrome. Except IE about which I have no idea, the code
+should run fine in other browsers.
 </p>
 <p>
 What I've observerd is that appending a random query string at the end
