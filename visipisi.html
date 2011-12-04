@@ -27,7 +27,7 @@ $(window).load(function () {
       $('#rundemo').attr('disabled', true).text('magic in progress');
       var endCB = function () {
         $('#rundemo').attr('disabled', false).text('Refresh');
-        $('#runtime').text('tested 36 sites in ' +
+        $('#runtime').text('tested 40 sites in ' +
           (new Date().getTime() - start) + ' milliseconds');
       };
       var urls = {
@@ -40,6 +40,7 @@ stumbleupon: 'http://cdn.stumble-upon.com/i/bg/logo_su.png',
 wired: 'http://www.wired.com/images/home/wired_logo.gif',
 xkcd: 'http://imgs.xkcd.com/s/9be30a7.png',
 linkedin: 'http://static01.linkedin.com/scds/common/u/img/sprite/sprite_global_v6.png',
+pornhub: 'http://cdn1.static.pornhub.phncdn.com/images/pornhub_logo_en.png',
 slashdot: 'http://a.fsdn.com/sd/logo_w_l.png',
 myspace: 'http://cms.myspacecdn.com/cms/x/11/47/title-WhatsHotWhite.jpg',
 engadget: 'http://www.blogsmithmedia.com/www.engadget.com/media/engadget_logo.png',
@@ -49,6 +50,7 @@ youtube: 'http://s.ytimg.com/yt/img/pixel-vfl3z5WfW.gif',
 yahoo: 'http://l.yimg.com/ao/i/mp/properties/frontpage/01/img/aufrontpage-sprite.s1740.gif',
 google: 'https://www.google.com/intl/en_com/images/srpr/logo3w.png',
 hotmail: 'https://secure.shared.live.com/~Live.SiteContent.ID/~16.2.8/~/~/~/~/images/iconmap.png',
+redtube: 'http://images.cdn.redtube.com/_thumbs/icons/twitter.png',
 cnn: 'http://i.cdn.turner.com/cnn/.element/img/3.0/global/header/intl/hdr-globe-central.gif',
 bbc: 'http://static.bbc.co.uk/frameworks/barlesque/1.21.2/desktop/3/img/blocks/light.png',
 reuters: 'http://www.reuters.com/resources_v2/images/masthead-logo.gif',
@@ -58,6 +60,7 @@ ebay: 'http://p.ebaystatic.com/aw/pics/au/logos/logoEbay_x45.gif',
 newegg: 'http://images10.newegg.com/WebResource/Themes/2005/Nest/neLogo.png',
 bestbuy: 'http://images.bestbuy.com/BestBuy_US/en_US/images/global/header/hdr_logo.gif',
 walmart: 'http://i2.walmartimages.com/i/header_wide/walmart_logo_214x54.gif',
+perfectgirls: 'http://www.perfectgirls.net/img/logoPG_02.jpg',
 abebooks: 'http://www.abebooks.com/images/HeaderFooter/siteRevamp/AbeBooks-logo.gif',
 msy: 'http://msy.com.au/images/MSYLogo-long.gif',
 techbuy: 'http://www.techbuy.com.au/themes/default/images/tblogo.jpg',
@@ -66,7 +69,8 @@ mozilla: 'http://www.mozilla.org/images/template/screen/logo_footer.png',
 anandtech: 'http://www.anandtech.com/content/images/globals/header_logo.png',
 tomshardware: 'http://m.bestofmedia.com/i/tomshardware/v3/logo_th.png',
 shopbot: 'http://i.shopbot.com.au/s/i/logo/en_AU/shopbot.gif',
-staticice: 'http://staticice.com.au/images/banner.jpg'
+staticice: 'http://staticice.com.au/images/banner.jpg',
+youporn: 'http://files.youporn.com/r/11/images/youporn.png'
       };
       sites = [];
       for (var k in urls)
@@ -384,22 +388,28 @@ I have devised a different method that seems to work across Safari, Chrome and F
   <th>anandtech:</th><td id="anandtech-status"></td>
 </tr>
 <tr>
-  <th>wired</th><td id="wired-status"></td>
+  <th>wired:</th><td id="wired-status"></td>
   <th>yahoo:</th><td id="yahoo-status"></td>
   <th>newegg:</th><td id="newegg-status"></td>
   <th>tomshardware:</th><td id="tomshardware-status"></td>
 </tr>
 <tr>
-  <th>xkcd</th><td id="xkcd-status"></td>
+  <th>xkcd:</th><td id="xkcd-status"></td>
   <th>google:</th><td id="google-status"></td>
   <th>bestbuy:</th><td id="bestbuy-status"></td>
   <th>shopbot (au):</th><td id="shopbot-status"></td>
 </tr>
 <tr>
-  <th>linkedin</th><td id="linkedin-status"></td>
+  <th>linkedin:</th><td id="linkedin-status"></td>
   <th>hotmail:</th><td id="hotmail-status"></td>
   <th>walmart:</th><td id="walmart-status"></td>
   <th>staticice:</th><td id="staticice-status"></td>
+</tr>
+<tr>
+  <th>pornhub:</th><td id="pornhub-status"></td>
+  <th>redtube:</th><td id="redtube-status"></td>
+  <th>perfectgirls:</th><td id="perfectgirls-status"></td>
+  <th>youporn:</th><td id="youporn-status"></td>
 </tr>
 </table>
 </div>
