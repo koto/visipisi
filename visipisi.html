@@ -13,11 +13,19 @@ type="text/javascript"></script>
 <script type="text/javascript">
 
 $(window).load(function () {
-  $('#rundemo').click(function (){
+  //var orgDemoLabel = $('#rundemo').text();
+  //$('#rundemo').attr('disabled', true).text('benchmarking ...');
+  // Benchmark the cache
+  //var bmurl = 'http://www.officeworks.com.au/retail/v1/images/logo-officeworks.png';
+  //vpBenchmark(bmurl, function (cacheTime) {
+    //$('#rundemo').attr('disabled', false).text(orgDemoLabel);
+    //$('#cachetime').text("your browser's cache access time is "
+    //                     + cacheTime + " ms");
+    $('#rundemo').click(function (){
 
-    var urls = {
-facebook: 'http://static.ak.fbcdn.net/rsrc.php/v1/yp/r/kk8dc2UJYJ4.png',
-twitter: 'https://twimg0-a.akamaihd.net/a/1322778272/phoenix/img/sprite-icons.png',
+      var urls = {
+facebook: 'https://s-static.ak.facebook.com/rsrc.php/v1/yJ/r/vOykDL15P0R.png',
+twitter: 'https://twitter.com/images/spinner.gif',
 digg: 'http://cdn2.diggstatic.com/img/sprites/global.5b25823e.png',
 reddit: 'http://www.redditstatic.com/sprite-reddit.pZL22qP4ous.png',
 hn: 'http://ycombinator.com/images/y18.gif',
@@ -52,23 +60,28 @@ anandtech: 'http://www.anandtech.com/content/images/globals/header_logo.png',
 tomshardware: 'http://m.bestofmedia.com/i/tomshardware/v3/logo_th.png',
 shopbot: 'http://i.shopbot.com.au/s/i/logo/en_AU/shopbot.gif',
 staticice: 'http://staticice.com.au/images/banner.jpg'
-    };
-    sites = [];
-    for (var k in urls)
-      sites.push(k);
-    sites.reverse();
+      };
+      sites = [];
+      for (var k in urls)
+        sites.push(k);
+      sites.reverse();
 
-    $('td').text('');
+      $('td').text('');
 
-    var firstSite = sites.pop();
-    visipisi(urls[firstSite], function(result) {
-      visipisiCB(sites, urls, firstSite, result);
+      var vp = $.browser.webkit ?
+        visipisi.webkit : visipisi.destructive;
+      var cacheTime = 0;
+
+      var firstSite = sites.pop();
+      vp(urls[firstSite], function(result) {
+        visipisiCB(vp, sites, urls, firstSite, cacheTime, result);
+      });
+
     });
-
-  });
+  //});
 });
 
-function visipisiCB(sites, urls, site, result) {
+function visipisiCB(vp, sites, urls, site, cacheTime, result) {
   if (result === null)
     $('#' + site + '-status').text('whoops').css('color', '#888');
   else
@@ -76,41 +89,115 @@ function visipisiCB(sites, urls, site, result) {
       .css('color', result ? 'green' : 'red');
   var nextSite = sites.pop();
   if (nextSite)
-    visipisi(urls[nextSite], function (result) {
-      visipisiCB(sites, urls, nextSite, result);
-    });
+    vp(urls[nextSite], function (result) {
+      visipisiCB(vp, sites, urls, nextSite, cacheTime, result);
+    }, cacheTime);
 }
 
-function visipisi(url, cb)
+function vpBenchmark(url, cb)
 {
-  var count = 0;
-  var start, cachedTime, uncachedTime;
-  var cached = new Image(), uncached = new Image();
-  var determineVisitedness = function () {
-    cb(cachedTime < 0.05 * uncachedTime);
-  }
-  var errCB = function () {
-    count = -10;
-    cb(null);
-  }
-
-  cached.onload = function() {
-    cachedTime = (new Date()).getTime() - start;
-    if (++count == 2)
-      determineVisitedness();
+  var timeCachedPage = function () {
+    var start = new Date().getTime();
+    var img = new Image();
+    img.onload = function () { cb(new Date().getTime() - start); };
+    img.src = url;
   };
-  uncached.onload = function() {
-    uncachedTime = (new Date()).getTime() - start;
-    if (++count == 2)
-      determineVisitedness();
-  };
-  cached.onerror = errCB;
-  uncached.onerror = errCB;
-
-  var start = (new Date()).getTime();
-  cached.src = url;
-  uncached.src = url + ('?' + Math.random());
+  var img = new Image();
+  img.onload = function () { img.src = ''; timeCachedPage(); }
+  img.src = url;
 }
+
+var visipisi = {
+  webkit: function (url, cb) {
+    var tries = 3;
+    var runtest = function () {
+      var count = 0;
+      var req = $.ajax(url, {
+        success: function() { if (++count == 1) cbWrap(true); },
+        error: function () { if (++count == 1) cbWrap(true); }
+      });
+      var timeoutCB = function () {
+        if (++count == 1) {
+          req.abort();
+          cbWrap(false);
+        }
+      };
+      window.setTimeout(function () { timeoutCB(); }, 10);
+    };
+    cbWrap = function (value) {
+      if (--tries == 0)
+        cb(value);
+      else
+        runtest();
+    };
+    runtest();
+  },
+  destructive: function (url, cb) {
+    var count = 0;
+    var start, cachedTime, uncachedTime;
+    var cached = new Image(), uncached = new Image();
+    var determineVisitedness = function () {
+      cb(cachedTime < 0.05 * uncachedTime);
+    }
+    var errCB = function () {
+      count = -10;
+      cb(null);
+    }
+
+    cached.onload = function() {
+      cachedTime = (new Date()).getTime() - start;
+      if (++count == 2)
+        determineVisitedness();
+    };
+    uncached.onload = function() {
+      uncachedTime = (new Date()).getTime() - start;
+      if (++count == 2)
+        determineVisitedness();
+    };
+    cached.onerror = errCB;
+    uncached.onerror = errCB;
+
+    var start = (new Date()).getTime();
+    cached.src = url;
+    uncached.src = url + ('?' + Math.random());
+  },
+  other: function (url, cb) {
+    // TODO
+  },
+  fallback: function (url, cb) {
+    var bmstart = new Date().getTime(), bmend1, bmend2;
+    var bmsrc = url + '?_=' + (new Date().getTime()) + Math.random();
+    var bmimg = new Image();
+    var runtest = function () {
+      var done = false;
+      var cacheThresh = bmend2 + (bmend1 - bmend2) / 2;
+      var req = $.ajax(url, {
+        success: function () { if (!done) { done = true; cb(true); } },
+        error: function () { if (!done) { done = true; cb(true); } },
+      });
+      setTimeout(function () {
+        if (!done) {
+          done = true;
+          req.abort();
+          cb(false);
+        }
+      }, cacheThresh);
+    };
+    bmimg.onload = function () {
+      bmend1 = new Date().getTime() - bmstart;
+      var runtestCB = function () {
+        bmend2 = new Date().getTime() - bmstart;
+        runtest();
+      };
+      $.ajax(bmsrc, {
+        success: runtestCB,
+        error: runtestCB
+      });
+    }
+    bmimg.src = bmsrc;
+  }
+};
+
 </script>
 <style type="text/css">
 body {
@@ -122,6 +209,7 @@ body {
 }
 h1, h2 { margin: 0; }
 h1 { font-size: 150%; } h2 { font-size: 115%; }
+.update { color: red; }
 table {
   width: 100%;
   border-collapse: collapse;
@@ -129,6 +217,7 @@ table {
 }
 table td, table th { border: 1px solid #ddd; }
 table th { text-align: left; width: 1px; }
+
 
 #code {
   width: 40%;
@@ -138,6 +227,10 @@ table th { text-align: left; width: 1px; }
   padding: 1em;
   font-size: 80%;
   line-height: 1.1em;
+  overflow: scroll;
+}
+#code-content {
+  height: 20em;
 }
 #demo {
   clear: both;
@@ -164,40 +257,98 @@ _gaq.push(['_trackPageview']);
 
 <div id="code">
 <h2>/code/</h2>
-<p>
-<pre>
-function visipisi(url, cb)
-{
-  var count = 0;
-  var start, cachedTime, uncachedTime;
-  var cached = new Image(), uncached = new Image();
-  var determineVisitedness = function () {
-    cb(cachedTime &lt; 0.05 * uncachedTime);
-  }
-  var errCB = function () {
-    count = -10;
-    cb(null);
-  }
+<pre id="code-content">
+var visipisi = {
+  webkit: function (url, cb) {
+    var tries = 3;
+    var runtest = function () {
+      var count = 0;
+      var req = $.ajax(url, {
+        success: function() { if (++count == 1) cbWrap(true); },
+        error: function () { if (++count == 1) cbWrap(true); }
+      });
+      var timeoutCB = function () {
+        if (++count == 1) {
+          req.abort();
+          cbWrap(false);
+        }
+      };
+      window.setTimeout(function () { timeoutCB(); }, 10);
+    };
+    cbWrap = function (value) {
+      if (--tries == 0)
+        cb(value);
+      else
+        runtest();
+    };
+    runtest();
+  },
+  destructive: function (url, cb) {
+    var count = 0;
+    var start, cachedTime, uncachedTime;
+    var cached = new Image(), uncached = new Image();
+    var determineVisitedness = function () {
+      cb(cachedTime &lt; 0.05 * uncachedTime);
+    }
+    var errCB = function () {
+      count = -10;
+      cb(null);
+    }
 
-  cached.onload = function() {
-    cachedTime = (new Date()).getTime() - start;
-    if (++count == 2)
-      determineVisitedness();
-  };
-  uncached.onload = function() {
-    uncachedTime = (new Date()).getTime() - start;
-    if (++count == 2)
-      determineVisitedness();
-  };
-  cached.onerror = errCB;
-  uncached.onerror = errCB;
+    cached.onload = function() {
+      cachedTime = (new Date()).getTime() - start;
+      if (++count == 2)
+        determineVisitedness();
+    };
+    uncached.onload = function() {
+      uncachedTime = (new Date()).getTime() - start;
+      if (++count == 2)
+        determineVisitedness();
+    };
+    cached.onerror = errCB;
+    uncached.onerror = errCB;
 
-  var start = (new Date()).getTime();
-  cached.src = url;
-  uncached.src = url + ('?' + Math.random());
-}
+    var start = (new Date()).getTime();
+    cached.src = url;
+    uncached.src = url + ('?' + Math.random());
+  },
+  other: function (url, cb) {
+    // TODO
+  },
+  fallback: function (url, cb) {
+    var bmstart = new Date().getTime(), bmend1, bmend2;
+    var bmsrc = url + '?_=' + (new Date().getTime()) + Math.random();
+    var bmimg = new Image();
+    var runtest = function () {
+      var done = false;
+      var cacheThresh = bmend2 + (bmend1 - bmend2) / 2;
+      var req = $.ajax(url, {
+        success: function () { if (!done) { done = true; cb(true); } },
+        error: function () { if (!done) { done = true; cb(true); } },
+      });
+      setTimeout(function () {
+        if (!done) {
+          done = true;
+          req.abort();
+          cb(false);
+        }
+      }, cacheThresh);
+    };
+    bmimg.onload = function () {
+      bmend1 = new Date().getTime() - bmstart;
+      var runtestCB = function () {
+        bmend2 = new Date().getTime() - bmstart;
+        runtest();
+      };
+      $.ajax(bmsrc, {
+        success: runtestCB,
+        error: runtestCB
+      });
+    }
+    bmimg.src = bmsrc;
+  }
+};
 </pre>
-</p>
 </div>
 
 <p id="desc">
@@ -233,10 +384,24 @@ All the code including this page is released under GPL license version
 3. If you have questions or any feedback, please send me an email at
 mansour [at] oxplot [dot] com
 </p>
+<h2 class="update">Update Dec 4, 2011 18:40 GMT+1100</h2>
+<p>
+Turns out Chrome (and probably all webkit based browsers) doesn't talk
+to the server when it's sure the resource is not modified (based on the
+cache expiry date) - FF for instance makes a request every time. This
+makes it very easy to know if something is loaded from cache. If the
+load time is super fast (0-10ms), it's most certainly loaded from cache
+unless the resource itself is quite beefy.
+</p>
+<p>
+So now for Chrome users, the test should run fast, more reliable and it
+shouldn't pollute your cache so mutiple runs will yield consistent
+results.
+</p>
 
 <div id="demo">
 <button id="rundemo">Do the magic</button>
-
+&nbsp;&nbsp;<span id='cachetime'></span>
 <table>
 <tr>
   <th>facebook:</th><td id="facebook-status"></td>
