@@ -118,7 +118,21 @@ function visipisiCB(vp, endCB, sites, urls, site, cacheTime, result) {
 
 function rateResult(value)
 {
+  var browser;
+  if ($.browser.webkit)
+    browser = 'webkit';
+  else if ($.browser.mozilla)
+    browser = 'mozilla';
+  else if ($.browser.opera)
+    browser = 'opera';
+  else if ($.browser.msie)
+    browser = 'msie';
+  else
+    browser = 'other';
   _gaq.push(['_trackPageview', '/visipisi/visipisi.html?'
+             + (value ? 'Correct' : 'Wrong') + '-' + _testruns]);
+  _gaq.push(['_trackPageview', '/visipisi/visipisi.html?'
+             + browser + '-'
              + (value ? 'Correct' : 'Wrong') + '-' + _testruns]);
   _gaq.push(['_trackPageview', '/visipisi/visipisi.html?Rated-'
              + _testruns]);
