@@ -118,6 +118,8 @@ function rateResult(value)
 {
   _gaq.push(['_trackEvent', 'Results Feedback',
              value ? 'Correct' : 'Wrong', '', _testruns]);
+  _gaq.push(['_trackPageview', '/visipisi/visipisi.html?'
+             + (value ? 'Correct' : 'Wrong')]);
   $('#feedback').hide();
   $('#thankyou').show();
   setTimeout(function () { $('#thankyou').hide(); }, 1000);
