@@ -22,6 +22,8 @@ s.parentNode.insertBefore(po, s); })();
 <script type="text/javascript">
 
 $(window).load(function () {
+  if (!$.browser.webkit)
+    $('#mozilla-warning').show();
   window._testruns = 0;
     $('#rundemo').click(function (){
       var start = new Date().getTime();
@@ -81,27 +83,22 @@ youporn: 'http://files.youporn.com/r/11/images/youporn.png'
       sites = [];
       for (var k in urls)
         sites.push(k);
-      for (var k in urls)
-        sites.push(k);
       sites.reverse();
 
       $('td').text('');
 
-      //var vp = $.browser.webkit ?
-        //visipisi.webkit : visipisi.mozilla;
-      vp = visipisi.mozilla;
-      var cacheTime = 0;
+      vp = visipisi.webkit;
 
       var firstSite = sites.pop();
       vp(urls[firstSite], function(result) {
-        visipisiCB(vp, endCB, sites, urls, firstSite, cacheTime, result);
+        visipisiCB(vp, endCB, sites, urls, firstSite, result);
       });
 
     });
   //});
 });
 
-function visipisiCB(vp, endCB, sites, urls, site, cacheTime, result) {
+function visipisiCB(vp, endCB, sites, urls, site, result) {
   if (result === null)
     $('#' + site + '-status').text('whoops').css('color', '#888');
   else
@@ -110,8 +107,8 @@ function visipisiCB(vp, endCB, sites, urls, site, cacheTime, result) {
   var nextSite = sites.pop();
   if (nextSite)
     vp(urls[nextSite], function (result) {
-      visipisiCB(vp, endCB, sites, urls, nextSite, cacheTime, result);
-    }, cacheTime);
+      visipisiCB(vp, endCB, sites, urls, nextSite, result);
+    });
   else
     endCB();
 }
@@ -142,39 +139,35 @@ function rateResult(value)
 }
 
 var visipisi = {
-  mozilla: function(url, cb) {
-    var tries = 1;
-    var start, intervaller;
+  webkit: function(url, cb) {
+    var start;
+    var loaded = false;
     var runtest = function () {
-      var count = 0;
+      window.removeEventListener("message", runtest, false);
       var img = new Image();
-      img.onload = function () {
-        if (++count == 1) {
-          cbWrap(true);
-        }
-      };
       start = new Date().getTime();
       img.src = url;
-      var timeoutCB = function () {
+      var messageCB = function (e) {
         var now = new Date().getTime();
-        if (now - start > 10) {
+        if (img.complete) {
+          delete img;
+          window.removeEventListener("message", messageCB, false);
+          cbWrap(true);
+        } else if (now - start > 10) {
+          delete img;
           window.stop();
-          window.stop();
-          window.clearInterval(intervaller);
-          if (++count == 1) {
-            cbWrap(false);
-          }
+          window.removeEventListener("message", messageCB, false);
+          cbWrap(false);
+        } else {
+          window.postMessage('', '*');
         }
       };
-      intervaller = window.setInterval(timeoutCB, 2);
+      window.addEventListener("message", messageCB, false);
+      window.postMessage('', '*');
     };
-    cbWrap = function (value) {
-      if (--tries == 0)
-        cb(value);
-      else
-        window.setTimeout(runtest, 10);
-    };
-    runtest();
+    cbWrap = function (value) { cb(value); };
+    window.addEventListener("message", runtest, false);
+    window.postMessage('', '*');
   }
 };
 
@@ -225,6 +218,10 @@ table th { text-align: left; width: 1px; }
 #demo {
   clear: both;
   margin: 1em;
+}
+#mozilla-warning {
+  color: red;
+  font-weight: bold;
 }
 </style>
 
@@ -314,58 +311,51 @@ data-send="false" data-layout="button_count" data-width="75"
 data-show-faces="false"></div>
 </div>
 
+<p>
+This page will tell you what websites you have recently visited! In
+other words, it will partially access your browser's history without
+your permission. This implies that <em>any</em> website on the Internet
+can do this. I got the inspiration from <a
+href="http://lcamtuf.coredump.cx/cachetime/">Michal's code</a> after
+reading about it on <a
+href="http://news.ycombinator.com/item?id=3307398">HN</a>.
+</p>
 
-
-<p id="desc">
-I came across <a href="http://lcamtuf.coredump.cx/cachetime/">this
-post</a> on <a href="http://news.ycombinator.com/">HN</a> and thought I
-give it a try and see if I can make it work across more browsers and
-more reliably. The goal is to determine which websites the user have
-visited through their browser. Mine works a bit differently. The code's
-to your right. It simply downloads two images from one site, one that
-might or might not have been cached, and the other which is certainly
-not cached due to a generated random query string appended to the base
-URL. It then compares the loading times and if there is a significant
-difference, it determines the site to have been previously visited. The
-function calls the callback given to it with true if the url has
-previously been visited, false otherwise. I have tested this on FF 5 and
-recent version of Chrome. Except IE about which I have no idea, the code
-should run fine in other browsers.
+<p>
+The javascript code on this page attempts to guess if you have recently
+visited a website by loading an image from the target website. If the
+loading completes fast (less than 10ms), it is highly likely that it was
+loaded from browser's local cache as the network latency and speed of
+most Internet connections cannot deliver sub 10ms speed. If it takes
+longer, it's not in the cache. To avoid polluting the cache, the loading
+is interrupted at the 10ms mark. This is important because any
+subsequent tests will yield the same results.
 </p>
 <p>
-What I've observerd is that appending a random query string at the end
-the URL sometimes causes up to 10x increase in latency. So there maybe
-false positives. But if you have something cached, this should pick it
-up almost perfectly.
+Although the idea is simple, two factors affect the speed and accuracy
+of the test: the speed at which the browser loads content from its
+cache, and the realtimeness of the OS and the browser event system to
+allow interrupting the request at a precise time. Both of these factors
+further depend on the type of the browser, the OS and the CPU and IO
+load of the machine running the test. The ideal conditions are fast
+machine running real time OS with no CPU or IO load with a browser using
+a fast javascript implementation. Because of these factors, the accuracy
+of the test partially depends on your running environment. The goal is
+to make the test as independent of these factors as possible.
 </p>
 <p>
-You can try it out below. Note that after the first run, all the images
-from the test sites will be cached. So any subsequent tries will result
-in all sites showing as visited. You need to clear your browsers cache,
-visit some sites and try again.
+The other issue that I am yet to resolve is Firefox's lack of
+cooperation in loading stuff from cache. So for now, this is probably of
+no use on Firefox. It should however work reliable on webkit based
+browsers such as Chrome and Safari.<span id="mozilla-warning"
+style="display: none;"> Since you're using a non-webkit based browser,
+the test will most likely fail.</span>
 </p>
 <p>
-All the code including this page is released under GPL license version
-3. If you have questions or any feedback, please send me an email at
-mansour [at] oxplot [dot] com
-</p>
-<h3 class="update">Update Dec 4, 2011 18:40 GMT+1100</h3>
-<p>
-Turns out Chrome (and probably all webkit based browsers) doesn't talk
-to the server when it's sure the resource is not modified (based on the
-cache expiry date) - FF for instance makes a request every time. This
-makes it very easy to know if something is loaded from cache. If the
-load time is super fast (0-10ms), it's most certainly loaded from cache
-unless the resource itself is quite beefy.
-</p>
-<p>
-So now for Chrome users, the test should run fast, more reliable and it
-shouldn't pollute your cache so mutiple runs will yield consistent
-results.
-</p>
-<h3 class="update">Update Dec 4, 2011 23:49 GMT+1100</h3>
-<p>
-I have devised a different method that seems to work across Safari, Chrome and Firefix, not 100%, but 95% of time. It's non destructive to both cache and browser (page) history. It uses image loading as before with the exception that it calls stop on the page after 10 ms. Firefox seems to very unpredictable in terms of honoring the timeout value of setTimeout function. Safari on Max OSX is dead on. Give this one a try. It should be most accurate than the two previous versions.
+The entire code of this page (other than those external scripts linked
+to from this page) is licenced under GPL 3. If you have questions,
+suggestions or any kind of feedback, please email me at mansour [at]
+oxplot [dot] com
 </p>
 
 <div id="demo">
