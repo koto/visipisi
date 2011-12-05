@@ -22,13 +22,17 @@ s.parentNode.insertBefore(po, s); })();
 <script type="text/javascript">
 
 $(window).load(function () {
+  window._testruns = 0;
     $('#rundemo').click(function (){
       var start = new Date().getTime();
       $('#rundemo').attr('disabled', true).text('magic in progress');
+      $('#feedback').hide();
       var endCB = function () {
+        _testruns++;
         $('#rundemo').attr('disabled', false).text('Refresh');
         $('#runtime').text('tested 40 sites in ' +
           (new Date().getTime() - start) + ' milliseconds');
+        $('#feedback').show();
       };
       var urls = {
 facebook: 'https://s-static.ak.facebook.com/rsrc.php/v1/yJ/r/vOykDL15P0R.png',
@@ -110,17 +114,13 @@ function visipisiCB(vp, endCB, sites, urls, site, cacheTime, result) {
     endCB();
 }
 
-function vpBenchmark(url, cb)
+function rateResult(value)
 {
-  var timeCachedPage = function () {
-    var start = new Date().getTime();
-    var img = new Image();
-    img.onload = function () { cb(new Date().getTime() - start); };
-    img.src = url;
-  };
-  var img = new Image();
-  img.onload = function () { img.src = ''; timeCachedPage(); }
-  img.src = url;
+  _gaq.push(['_trackEvent', 'Results Feedback',
+             value ? 'Correct' : 'Wrong', '', _testruns]);
+  $('#feedback').hide();
+  $('#thankyou').show();
+  setTimeout(function () { $('#thankyou').hide(); }, 1000);
 }
 
 var visipisi = {
@@ -131,8 +131,9 @@ var visipisi = {
       var count = 0;
       var img = new Image();
       img.onload = function () {
-        if (++count == 1)
+        if (++count == 1) {
           cbWrap(true);
+        }
       };
       start = new Date().getTime();
       img.src = url;
@@ -180,6 +181,8 @@ table {
 table td, table th { border: 1px solid #ddd; }
 table th { text-align: left; width: 1px; }
 
+#feedback { text-align: center; font-weight: bold; }
+#thankyou { text-align: center; }
 #sharing {
   float: right;
   clear: right;
@@ -412,6 +415,13 @@ I have devised a different method that seems to work across Safari, Chrome and F
   <th>youporn:</th><td id="youporn-status"></td>
 </tr>
 </table>
+<p id="feedback" style="display: none;">
+Do the results look correct?
+<a href="javascript: rateResult(true)">Yes</a>
+/ <a href="javascript: rateResult(false)">No</a>
+</p>
+<p id="thankyou" style="display: none;">
+  Thanks for your feedback</p>
 </div>
 
 </body>
