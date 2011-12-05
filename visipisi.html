@@ -29,6 +29,8 @@ $(window).load(function () {
       $('#feedback').hide();
       var endCB = function () {
         _testruns++;
+        _gaq.push(['_trackPageview', '/visipisi/visipisi.html?Run'
+                   + _testruns]);
         $('#rundemo').attr('disabled', false).text('Refresh');
         $('#runtime').text('tested 40 sites in ' +
           (new Date().getTime() - start) + ' milliseconds');
@@ -119,7 +121,7 @@ function rateResult(value)
   _gaq.push(['_trackEvent', 'Results Feedback',
              value ? 'Correct' : 'Wrong', '', _testruns]);
   _gaq.push(['_trackPageview', '/visipisi/visipisi.html?'
-             + (value ? 'Correct' : 'Wrong')]);
+             + (value ? 'Correct' : 'Wrong') + '-' + _testruns]);
   $('#feedback').hide();
   $('#thankyou').show();
   setTimeout(function () { $('#thankyou').hide(); }, 1000);
